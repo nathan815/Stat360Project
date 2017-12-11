@@ -15,7 +15,7 @@ public class GenerateData {
 	 */
 	public static void createTables() {
 		int startPower = 10;
-		int endPower = 30;
+		int endPower = 25;
 		for(int i = startPower; i <= endPower; i++) {
 			createTable("PreTest_2^"+i);
 			createTable("PostTest_2^"+i);
@@ -26,8 +26,8 @@ public class GenerateData {
 	 * Insert data into the Pre and PostTest tables for each table size
 	 */
 	public static void insertDataIntoTables() {
-		int startPower = 25;
-		int endPower = 30;
+		int startPower = 10;
+		int endPower = 25;
 		try {
 			stmt = conn.createStatement();
 
@@ -45,35 +45,61 @@ public class GenerateData {
 	}
 	
 	private static void insertDataForTableSize(int power) throws SQLException {
-		long rows = (long) Math.pow(2, power);
-		
-		conn.setAutoCommit(false);
 
-		insertIntoTable("PreTest_2^"+power, rows);
-		insertIntoTable("PostTest_2^"+power, rows);
-		
-		conn.commit();
-		System.out.println("Queries Committed");
+		insertIntoTable("PreTest_2^"+power, power);
+		insertIntoTable("PostTest_2^"+power, power);
+
+		System.out.println("Done");
 		
 	}
 	
-	private static void insertIntoTable(String tableName, long numRows) throws SQLException {
+	private static void insertIntoTable(String tableName, int power) throws SQLException {
 		
-		String sqlFormat = "INSERT INTO `%s` (`StudentId`, `Score`) VALUES";
+		int numRows = (int) Math.pow(2, power);
+		
 		StringBuilder sql = new StringBuilder();
+		
+		// split into multiple INSERT query strings 
+		// (2^power/power^2) i.e. 2^25/25^2 
+		// otherwise we run out of memory due to query string being too long
+		int rowsPerQuery = (int) Math.ceil(numRows / Math.pow(power, 2));
+		int numQueries = numRows/rowsPerQuery;
+		int lastStop = 0;
+		int stop = 0;
 		int score = 0;
 		
-		sql = sql.append(String.format(sqlFormat, tableName));
-		System.out.println("Starting SQL creation for " + tableName);
-		for(long id = 1; id <= numRows; id++) {
-			score = (int) Math.round(Math.random() * 100);
-			sql.append("(" + id + ", " + score + ") " + (id != numRows ? "," : ""));
-			//System.out.print(id + " " + (id%20==0?"\n":""));
+		for(int j = 0; j < numQueries; j++) {
+			System.out.println("\nStarting SQL string #"+j+" creation for " + tableName);
+			// clear what sql has right now
+			sql.setLength(0);
+			sql.append("INSERT INTO `");
+			sql.append(tableName);
+			sql.append("` (`StudentId`, `Score`) VALUES");
+			
+			stop = lastStop + rowsPerQuery;
+			
+			// construct INSERT SQL string for this query
+			for(long id = lastStop+1; id <= stop; id++) {
+				score = (int) Math.round(Math.random() * 100);
+				sql.append("(");
+				sql.append(id); 
+				sql.append(",");
+				sql.append(score);
+				sql.append(")");
+				
+				if(id != stop)
+					sql.append(",");
+				
+				//System.out.print(id + " " + (id%20==0?"\n":""));
+			}
+			
+			System.out.println("SQL string created. Executing query for "+tableName+" .... ");
+			stmt.execute(sql.toString());
+			System.out.println("Inserted "+rowsPerQuery+" rows into " + tableName);
+			lastStop = stop;
 		}
 		
-		System.out.print("\nSQL string created! Executing query for "+tableName+" .... ");
-		stmt.execute(sql.toString());
-		System.out.println("Inserted "+numRows+" rows into " + tableName);
+		
 	}
 	
 	private static boolean createTable(String name) {

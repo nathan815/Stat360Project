@@ -7,6 +7,6 @@ public class Main {
 		// done
 		
 		// Step 2 - Actually generate data for those tables
-		GenerateData.insertDataIntoTables();
+		//GenerateData.insertDataIntoTables();
 	}
 }
