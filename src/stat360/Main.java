@@ -5,7 +5,7 @@ public class Main {
 	// start and end table sizes
 	// powers of 2 
 	private static final int START_POWER = 10;
-	private static final int END_POWER = 25;
+	private static final int END_POWER = 20;
 	
 	// number of trials to run
 	// each trial runs the query on every table, in random order

@@ -14,8 +14,6 @@ public class RunQuery {
 	private int endPower;
 	private int[] powers;
 	
-	private final boolean SHOW_QUERY_RESULTS = false;
-	
 	public RunQuery(int start, int end) {
 		this.startPower = start;
 		this.endPower = end;
@@ -27,6 +25,7 @@ public class RunQuery {
 		int[] randomPowers;
 		int trial = getLastTrialNumber();
 		try {
+			Statement stmt = conn.createStatement();
 			for(int i = 0; i < numTrials; i++) {
 				trial++;
 				System.out.println("Trial #" + trial);
@@ -35,7 +34,7 @@ public class RunQuery {
 				randomPowers = getRandomizedPowers();
 				// run query for each table size
 				for(int j = 0; j < randomPowers.length; j++) {
-					runQueryOnTableSize(randomPowers[j], trial);
+					runQueryOnTableSize(randomPowers[j], trial, stmt);
 				}
 
 			}			
@@ -49,46 +48,30 @@ public class RunQuery {
 	 * @param power
 	 * @throws SQLException
 	 */
-	private void runQueryOnTableSize(int power, int trial) throws SQLException {
-		Statement stmt;
+	private void runQueryOnTableSize(int power, int trial, Statement stmt) throws SQLException {
 		long startTime = 0;
 		long nanosecondsRunTime = 0;
 		double millisecondsRunTime = 0;
 		String pre  = "PreTest_2^" + power;
 		String post = "PostTest_2^" + power;
-		int limit = (int) Math.pow(power, 3);
 		
 		// this query joins the two pre and post tables
-		// and limits the rows by the table size power cubed
-		// i.e., 2^25 is limited to 25^3 rows. 2^10 is limited to 10^3 rows
-		// if we join the entire table, it takes too long and uses up a lot of memory
 		String sql = "SELECT Pre.StudentId, "
 				   +        "Pre.Score, "
 				   +        "Post.Score "
 				   +   "FROM `%s` AS Pre "
 				   +   "JOIN `%s` AS Post "
-				   +     "ON Pre.StudentId = Post.StudentId "
-				   +  "LIMIT %d";
+				   +     "ON Pre.StudentId = Post.StudentId ";
 		
-		sql = String.format(sql, pre, post, limit);
-		System.out.println("Table size: 2^"+power);
+		sql = String.format(sql, pre, post);
+		System.out.println("Trial #"+trial+", Table size: 2^"+power);
 		System.out.println("Running: " + sql);
-		
-		stmt = conn.createStatement();
 
 		startTime = System.nanoTime(); // start timer
-		ResultSet set = stmt.executeQuery(sql); // run query
+		stmt.executeQuery(sql); // run query
 		nanosecondsRunTime = System.nanoTime() - startTime; // end timer
 		
-		if(SHOW_QUERY_RESULTS) {
-			while(set.next()) {
-				System.out.println(
-						"Student: " + set.getInt(1) 
-					+ ", Pre: " + set.getInt(2) 
-					+ ", Post: " + set.getInt(3)
-				);
-			}
-		}
+		stmt.close();
 
 		millisecondsRunTime = nanoToMilli(nanosecondsRunTime);
 		System.out.println("\nQuery took " + millisecondsRunTime + " milliseconds\n");
@@ -110,6 +93,7 @@ public class RunQuery {
 		stmt.setDouble(2, time);
 		stmt.setInt(3, trial);
 		stmt.execute();
+		stmt.close();
 	}
 	
 	/**
