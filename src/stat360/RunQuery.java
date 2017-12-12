@@ -26,7 +26,7 @@ public class RunQuery {
 	private int getLastTrialNumber() {
 		try {
 			Statement stmt = conn.createStatement();
-			ResultSet set = stmt.executeQuery("SELECT Trial FROM Stats2 ORDER BY Trial DESC LIMIT 1");
+			ResultSet set = stmt.executeQuery("SELECT Trial FROM Stats ORDER BY Trial DESC LIMIT 1");
 			if(set.next())
 				return set.getInt(1);
 		} catch (SQLException e) {
@@ -63,7 +63,7 @@ public class RunQuery {
 	 * @throws SQLException 
 	 */
 	private void recordTime(double time, int tableSize, int trial) throws SQLException {
-		String sql = "INSERT INTO Stats2 ( TableSizePower, RunTime, Trial ) VALUES ( ?, ?, ? );";
+		String sql = "INSERT INTO Stats ( TableSizePower, RunTime, Trial ) VALUES ( ?, ?, ? );";
 		PreparedStatement stmt = conn.prepareStatement(sql);
 		stmt.setInt(1, tableSize);
 		stmt.setDouble(2, time);
