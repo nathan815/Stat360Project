@@ -6,54 +6,64 @@ import java.sql.Statement;
 
 public class GenerateData {
 	
-	private static Connection conn = MysqlConn.getInstance().getConnection();
-	private static Statement stmt;
+	private Connection conn;
+	private Statement stmt;
+	private int startPower;
+	private int endPower;
+	
+	public GenerateData(int start, int end) {
+		this.startPower = start;
+		this.endPower = end;
+		conn = MysqlConn.getInstance().getConnection();
+	}
 	
 	/**
 	 * Create the PreTest and PostTest tables for each table size
 	 * Data will be generated later on
 	 */
-	public static void createTables() {
-		int startPower = 10;
-		int endPower = 25;
+	public void createTables() {
 		for(int i = startPower; i <= endPower; i++) {
 			createTable("PreTest_2^"+i);
 			createTable("PostTest_2^"+i);
 		}
 	}
 	
+	private void createTable(String name) {
+		String sql = String.format("CREATE TABLE %s (StudentId int(11), Score int(11));", name);
+		
+		try {
+			stmt = conn.createStatement();
+			stmt.execute(sql);
+			System.out.println("Created table: " + name);
+		} catch (SQLException e) {
+			System.out.println("SQL: "+sql);
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Insert data into the Pre and PostTest tables for each table size
 	 */
-	public static void insertDataIntoTables() {
-		int startPower = 10;
-		int endPower = 25;
+	public void insertDataIntoTables() {
 		try {
 			stmt = conn.createStatement();
 
-			System.out.println("Starting table data creation...");
+			System.out.println("Starting table data insertion...");
 			for(int i = startPower; i <= endPower; i++) {
-				System.out.println("Table size: "+i);
-				insertDataForTableSize(i);
+				System.out.println("Table size: 2^"+i);
+				insertRowsIntoTable("PreTest_2^"+i, i);
+				insertRowsIntoTable("PostTest_2^"+i, i);
 			}
 			
 			stmt.close();
+			System.out.println("Finished inserting data into tables.");
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private static void insertDataForTableSize(int power) throws SQLException {
-
-		insertIntoTable("PreTest_2^"+power, power);
-		insertIntoTable("PostTest_2^"+power, power);
-
-		System.out.println("Done");
-		
-	}
-	
-	private static void insertIntoTable(String tableName, int power) throws SQLException {
+	private void insertRowsIntoTable(String tableName, int power) throws SQLException {
 		
 		int numRows = (int) Math.pow(2, power);
 		
@@ -100,21 +110,6 @@ public class GenerateData {
 		}
 		
 		
-	}
-	
-	private static boolean createTable(String name) {
-		String sql = String.format("CREATE TABLE %s (StudentId int(11), Score int(11));", name);
-		
-		try {
-			stmt = conn.createStatement();
-			boolean exe = stmt.execute(sql);
-			System.out.println("Created table: " + name);
-			return exe;
-		} catch (SQLException e) {
-			System.out.println("SQL: "+sql);
-			e.printStackTrace();
-			return false;
-		}
 	}
 
 }
