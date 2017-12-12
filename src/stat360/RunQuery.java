@@ -23,18 +23,6 @@ public class RunQuery {
 		powers = getListOfPowers();
 	}
 	
-	private int getLastTrialNumber() {
-		try {
-			Statement stmt = conn.createStatement();
-			ResultSet set = stmt.executeQuery("SELECT Trial FROM Stats ORDER BY Trial DESC LIMIT 1");
-			if(set.next())
-				return set.getInt(1);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
-	}
-	
 	public void runTrials(int numTrials) {
 		int[] randomPowers;
 		int trial = getLastTrialNumber();
@@ -57,21 +45,6 @@ public class RunQuery {
 	}
 	
 	/**
-	 * Records query run time for a table size in Stats table
-	 * @param time
-	 * @param tableSize
-	 * @throws SQLException 
-	 */
-	private void recordTime(double time, int tableSize, int trial) throws SQLException {
-		String sql = "INSERT INTO Stats ( TableSizePower, RunTime, Trial ) VALUES ( ?, ?, ? );";
-		PreparedStatement stmt = conn.prepareStatement(sql);
-		stmt.setInt(1, tableSize);
-		stmt.setDouble(2, time);
-		stmt.setInt(3, trial);
-		stmt.execute();
-	}
-	
-	/**
 	 * Run the query for a given table size
 	 * @param power
 	 * @throws SQLException
@@ -85,6 +58,10 @@ public class RunQuery {
 		String post = "PostTest_2^" + power;
 		int limit = (int) Math.pow(power, 3);
 		
+		// this query joins the two pre and post tables
+		// and limits the rows by the table size power cubed
+		// i.e., 2^25 is limited to 25^3 rows. 2^10 is limited to 10^3 rows
+		// if we join the entire table, it takes too long and uses up a lot of memory
 		String sql = "SELECT Pre.StudentId, "
 				   +        "Pre.Score, "
 				   +        "Post.Score "
@@ -99,9 +76,9 @@ public class RunQuery {
 		
 		stmt = conn.createStatement();
 
-		startTime = System.nanoTime();
-		ResultSet set = stmt.executeQuery(sql);
-		nanosecondsRunTime = System.nanoTime() - startTime;
+		startTime = System.nanoTime(); // start timer
+		ResultSet set = stmt.executeQuery(sql); // run query
+		nanosecondsRunTime = System.nanoTime() - startTime; // end timer
 		
 		if(SHOW_QUERY_RESULTS) {
 			while(set.next()) {
@@ -120,6 +97,41 @@ public class RunQuery {
 		
 	}
 	
+	/**
+	 * Records query run time for a table size in Stats table
+	 * @param time
+	 * @param tableSize
+	 * @throws SQLException 
+	 */
+	private void recordTime(double time, int tableSize, int trial) throws SQLException {
+		String sql = "INSERT INTO Stats ( TableSizePower, RunTime, Trial ) VALUES ( ?, ?, ? );";
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		stmt.setInt(1, tableSize);
+		stmt.setDouble(2, time);
+		stmt.setInt(3, trial);
+		stmt.execute();
+	}
+	
+	/**
+	 * Returns the latest trial number in Stats table
+	 * @return
+	 */
+	private int getLastTrialNumber() {
+		try {
+			Statement stmt = conn.createStatement();
+			ResultSet set = stmt.executeQuery("SELECT Trial FROM Stats ORDER BY Trial DESC LIMIT 1");
+			if(set.next())
+				return set.getInt(1);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+	
+	/**
+	 * Returns array of table size powers of 2
+	 * @return
+	 */
 	private int[] getListOfPowers() {
 		int length = endPower-startPower+1;
 		int[] listOfPowers = new int[length];
@@ -129,6 +141,10 @@ public class RunQuery {
 		return listOfPowers;
 	}
 	
+	/**
+	 * randomized list of powers 
+	 * @return
+	 */
 	private int[] getRandomizedPowers() {
 		Random r = new Random();
 		for(int i = powers.length-1; i > 0; i--) {
