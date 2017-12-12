@@ -37,7 +37,8 @@ public class RunQuery {
 					runQueryOnTableSize(randomPowers[j], trial, stmt);
 				}
 
-			}			
+			}	
+			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -70,8 +71,6 @@ public class RunQuery {
 		startTime = System.nanoTime(); // start timer
 		stmt.executeQuery(sql); // run query
 		nanosecondsRunTime = System.nanoTime() - startTime; // end timer
-		
-		stmt.close();
 
 		millisecondsRunTime = nanoToMilli(nanosecondsRunTime);
 		System.out.println("\nQuery took " + millisecondsRunTime + " milliseconds\n");
