@@ -7,9 +7,16 @@ public class Main {
 	private static final int START_POWER = 10;
 	private static final int END_POWER = 25;
 	
+	// number of trials to run
+	// each trial runs the query on every table, in random order
+	private static final int NUM_TRIALS = 500;
+	
 	public static void main(String args[]) {
+
+		GenerateData gen = new GenerateData(START_POWER, END_POWER);
+		RunQuery runner = new RunQuery(START_POWER, END_POWER);
+		
 		// Step 1 - Create the tables for this project
-		//GenerateData gen = new GenerateData(START_POWER, END_POWER);
 		//gen.createTables();
 		// Done
 		
@@ -17,8 +24,8 @@ public class Main {
 		//gen.insertDataIntoTables();
 		// Done
 		
-		// Step 3 - Run the queries on each table size, in random order
-		RunQuery runner = new RunQuery(START_POWER, END_POWER);
-		runner.run();
+		// Step 3 - Run the trials
+		// This will record query run times for the table sizes in the 'Stats' table
+		runner.runTrials(NUM_TRIALS);
 	}
 }
