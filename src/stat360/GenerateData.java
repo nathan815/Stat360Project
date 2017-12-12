@@ -35,24 +35,6 @@ public class GenerateData {
 			stmt = conn.createStatement();
 			stmt.execute(sql);
 			System.out.println("Created table: " + name);
-			System.out.println("Adding index on Score...");
-			addIndexToTable(name);
-		} catch (SQLException e) {
-			System.out.println("SQL: "+sql);
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Add index for Score column
-	 * @param name
-	 */
-	private void addIndexToTable(String name) {
-		String sql = String.format("ALTER TABLE `%s` ADD INDEX `Score` (`Score`)", name);
-		
-		try {
-			stmt.execute(sql);
-			System.out.println("Added Score index to table: " + name);
 		} catch (SQLException e) {
 			System.out.println("SQL: "+sql);
 			e.printStackTrace();

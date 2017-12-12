@@ -9,7 +9,7 @@ public class Main {
 	
 	// number of trials to run
 	// each trial runs the query on every table, in random order
-	private static final int NUM_TRIALS = 500;
+	private static final int NUM_TRIALS = 100;
 	
 	public static void main(String args[]) {
 
