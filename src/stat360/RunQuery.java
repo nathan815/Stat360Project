@@ -100,15 +100,18 @@ public class RunQuery {
 	 * @return
 	 */
 	private int getLastTrialNumber() {
+		int trial = 0;
 		try {
 			Statement stmt = conn.createStatement();
 			ResultSet set = stmt.executeQuery("SELECT Trial FROM Stats ORDER BY Trial DESC LIMIT 1");
 			if(set.next())
-				return set.getInt(1);
+				trial = set.getInt(1);
+			set.close();
+			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return 0;
+		return trial;
 	}
 	
 	/**
